@@ -1,13 +1,3 @@
-# 2018 population, source: Wikipedia
-uk_pop <- tibble::tribble(
-  ~nation, ~population,
-  "England", 55977178,
-  "Scotland", 5438100,
-  "Wales", 3138631,
-  "Northern Ireland", 1881641,
-  "UK", 66435550	
-)
-
 last_week <- function(x, ctry="UK") {
   x %>%
     filter(country == ctry & region == ctry & year == 2020) %>%

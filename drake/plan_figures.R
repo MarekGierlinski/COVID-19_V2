@@ -14,7 +14,12 @@ plan_figures <- function() {
     fig_exc_uk_nations = plot_uk_nation_excess(uk_exc_nations) %>% sz(5, 5, url_ft)
   )
   
-  fig_plan <- figs_from_plan(bind_rows(ecdc_figures, excess_figures))
+  gov_figures <- drake_plan(
+    fig_weekly_cases_uk = plot_gov_weekly(gov) %>% sz(9, 8, url_gov),
+    fig_gov = plot_admissions_cases_deaths(gov) %>% sz(7, 4, url_gov)
+  )
+  
+  fig_plan <- figs_from_plan(bind_rows(ecdc_figures, excess_figures, gov_figures))
   
   save_figures <- drake_plan(
     pdf_figures = target(
@@ -26,6 +31,7 @@ plan_figures <- function() {
   bind_rows(
     ecdc_figures,
     excess_figures,
+    gov_figures,
     save_figures
   )
   

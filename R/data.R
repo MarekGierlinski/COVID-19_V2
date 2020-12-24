@@ -1,3 +1,16 @@
+# 2018 population, source: Wikipedia
+uk_pop <- tibble::tribble(
+  ~nation, ~population,
+  "England", 55977178,
+  "Scotland", 5438100,
+  "Wales", 3138631,
+  "Northern Ireland", 1881641,
+  "UK", 66435550	
+)
+
+
+
+
 get_ecdc_url <- function() {
   urlc <- "https://opendata.ecdc.europa.eu/covid19/casedistribution/csv"
   stopifnot(url.exists(urlc))
@@ -65,4 +78,31 @@ process_ft_data <- function(raw) {
     select(-month)
 }
 
+##########################################################
 
+get_gov_url <- function() {
+  urlc <- 'https://api.coronavirus.data.gov.uk/v1/data?filters=areaType=nation&structure={"areaType":"areaType","areaName":"areaName","areaCode":"areaCode","date":"date","newCasesBySpecimenDate":"newCasesBySpecimenDate","cumCasesBySpecimenDate":"cumCasesBySpecimenDate","hospitalCases":"hospitalCases","newAdmissions":"newAdmissions","newDeaths28DaysByDeathDate":"newDeaths28DaysByDeathDate"}&format=csv'
+}
+
+fetch_gov_data <- function(urlc) {
+  read_csv(urlc, col_types = cols()) 
+}
+
+process_gov_data <- function(raw) {
+  raw %>% 
+    rename(
+      nation = areaName,
+      cases = newCasesBySpecimenDate,
+      hospital_cases = hospitalCases,
+      admissions = newAdmissions,
+      deaths = newDeaths28DaysByDeathDate
+    ) %>% 
+    drop_na() %>% 
+    left_join(uk_pop, by="nation") %>% 
+    mutate(
+      cases_pop = 1e6 * cases / population,
+      hospital_cases_pop = 1e6 * hospital_cases / population,
+      admissions_pop = 1e6 * admissions / population,
+      deaths_pop = 1e6 * deaths / population
+    )
+}

@@ -13,8 +13,15 @@ plan_data <- function() {
     uk_exc_nations = UK_nation_excess(ft)
   )
   
+  gov_data <- drake_plan(
+    url_gov = get_gov_url(),
+    gov_raw = fetch_gov_data(url_gov),
+    gov = process_gov_data(gov_raw)
+  )
+  
   bind_rows(
     ecdc_data,
-    ft_data
+    ft_data,
+    gov_data
   )
 }
