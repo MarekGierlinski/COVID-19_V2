@@ -5,6 +5,7 @@ suppressPackageStartupMessages({
   library(cowplot)
   library(ggrepel)
   library(ggbeeswarm)
+  library(ggridges)
   library(RCurl)
   library(tidyverse)
 })

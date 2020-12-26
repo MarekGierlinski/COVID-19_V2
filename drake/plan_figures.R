@@ -2,8 +2,12 @@ plan_figures <- function() {
   
   ecdc_figures <- drake_plan(
     fig_col_cases_sel1 = plot_countries_col(ecdc, sel1, what="cases") %>% sz(8, 6, url_ecdc),
-    fig_hister_cases_sel1 = plot_countries_hysteresis(ecdc, sel1) %>% sz(8, 6, url_ecdc),
-    fig_all_cases = plot_countries_line(ecdc, what="cases") %>% sz(20, 16, url_ecdc)
+    fig_ridge_cases_sel1 = plot_countries_ridge(ecdc, sel1, "cases", scl=0.002) %>% sz(6, 8, url_ecdc),
+    fig_col_deaths_sel1 = plot_countries_col(ecdc, sel1, what="deaths") %>% sz(8, 6, url_ecdc),
+    fig_ridge_deaths_sel1 = plot_countries_ridge(ecdc, sel1, "deaths", scl=0.1) %>% sz(6, 8, url_ecdc),
+    fig_hister_sel1 = plot_countries_hysteresis(ecdc, sel1) %>% sz(8, 6, url_ecdc),
+    
+    fig_all_cases = plot_countries_line(ecdc, what="cases", n.col=18) %>% sz(26, 16, url_ecdc)
   )
   
   excess_figures <- drake_plan(
@@ -22,7 +26,7 @@ plan_figures <- function() {
   fig_plan <- figs_from_plan(bind_rows(ecdc_figures, excess_figures, gov_figures))
   
   save_figures <- drake_plan(
-    pdf_figures = target(
+    png_figures = target(
       command = annotate_save(filename, obj),
       transform = map(.data = !!fig_plan, .id=eval(obj))
     )

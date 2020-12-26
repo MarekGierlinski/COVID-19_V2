@@ -4,7 +4,7 @@ sel1 <- c(
   "France",
   "Germany",
   "United Kingdom",
-  "United States",
+  "Poland",
   "Sweden",
   "Belgium",
   "Netherlands",
