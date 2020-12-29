@@ -22,7 +22,7 @@ fetch_ecdc_data <- function(urlc) {
 }
 
 process_ecdc_data <- function(raw) {
-  raw %>% 
+  d <- raw %>% 
     rename(
       country = countriesAndTerritories,
       code = countryterritoryCode,
@@ -57,6 +57,8 @@ process_ecdc_data <- function(raw) {
       cum_cases_pop = 1e6 * cum_cases / population,
       cum_deaths_pop = 1e6 * cum_deaths/ population
     )
+  print(paste("ECDC last date", max(d$date)))
+  d
 }
 
 ##########################################################
@@ -73,9 +75,11 @@ fetch_ft_data <- function(urlc) {
 
 # Ignore monthly data
 process_ft_data <- function(raw) {
-  raw %>%
+  d <- raw %>%
     filter(!is.na(week)) %>% 
     select(-month)
+  print(paste("FT last date", max(d$date)))
+  d
 }
 
 ##########################################################
@@ -89,7 +93,7 @@ fetch_gov_data <- function(urlc) {
 }
 
 process_gov_data <- function(raw) {
-  raw %>% 
+  d <- raw %>% 
     rename(
       nation = areaName,
       cases = newCasesBySpecimenDate,
@@ -105,4 +109,6 @@ process_gov_data <- function(raw) {
       admissions_pop = 1e6 * admissions / population,
       deaths_pop = 1e6 * deaths / population
     )
+  print(paste("GOV last date", max(d$date)))
+  d
 }
