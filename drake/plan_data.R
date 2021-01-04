@@ -14,7 +14,7 @@ plan_data <- function() {
   )
   
   gov_data <- drake_plan(
-    url_gov = get_gov_url(),
+    url_gov = get_gov_url_v2(),
     gov_raw = fetch_gov_data(url_gov),
     gov = process_gov_data(gov_raw)
   )

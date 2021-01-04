@@ -84,30 +84,38 @@ process_ft_data <- function(raw) {
 
 ##########################################################
 
-get_gov_url <- function() {
-  urlc <- 'https://api.coronavirus.data.gov.uk/v1/data?filters=areaType=nation&structure={"areaType":"areaType","areaName":"areaName","areaCode":"areaCode","date":"date","newCasesBySpecimenDate":"newCasesBySpecimenDate","cumCasesBySpecimenDate":"cumCasesBySpecimenDate","hospitalCases":"hospitalCases","newAdmissions":"newAdmissions","newDeaths28DaysByDeathDate":"newDeaths28DaysByDeathDate"}&format=csv'
+get_gov_url_v1 <- function() {
+  'https://api.coronavirus.data.gov.uk/v1/data?filters=areaType=nation&structure={"areaType":"areaType","areaName":"areaName","areaCode":"areaCode","date":"date","newCasesBySpecimenDate":"newCasesBySpecimenDate","cumCasesBySpecimenDate":"cumCasesBySpecimenDate","hospitalCases":"hospitalCases","newAdmissions":"newAdmissions","newDeaths28DaysByDeathDate":"newDeaths28DaysByDeathDate"}&format=csv'
+}
+
+get_gov_url_v2 <- function() {
+  'https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&metric=hospitalCases&metric=newAdmissions&metric=newCasesByPublishDate&metric=newDeaths28DaysByPublishDate&metric=newCasesBySpecimenDate&metric=newDeaths28DaysByDeathDate&format=csv'
 }
 
 fetch_gov_data <- function(urlc) {
-  read_csv(urlc, col_types = cols()) 
+  read_csv(urlc, col_types = cols())
 }
 
 process_gov_data <- function(raw) {
   d <- raw %>% 
+    select(-c(areaType, areaCode)) %>% 
     rename(
       nation = areaName,
       cases = newCasesBySpecimenDate,
+      cases_pub = newCasesByPublishDate,
       hospital_cases = hospitalCases,
       admissions = newAdmissions,
-      deaths = newDeaths28DaysByDeathDate
+      deaths = newDeaths28DaysByDeathDate,
+      deaths_pub = newDeaths28DaysByPublishDate
     ) %>% 
-    drop_na() %>% 
     left_join(uk_pop, by="nation") %>% 
     mutate(
       cases_pop = 1e6 * cases / population,
+      cases_pub_pop = 1e6 * cases_pub / population,
       hospital_cases_pop = 1e6 * hospital_cases / population,
       admissions_pop = 1e6 * admissions / population,
-      deaths_pop = 1e6 * deaths / population
+      deaths_pop = 1e6 * deaths / population,
+      deaths_pub_pop = 1e6 * deaths_pub / population
     )
   print(paste("GOV last date", max(d$date)))
   d
