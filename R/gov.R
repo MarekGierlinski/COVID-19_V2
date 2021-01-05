@@ -43,20 +43,30 @@ plot_gov_weekly <- function(gv) {
 }
 
 
-sum_gov <- function(gv) {
+sum_gov <- function(gv, by_publish_date = FALSE) {
+  if(by_publish_date) gv <- gv %>% mutate(cases = cases_pub, deaths = deaths_pub)
   gv %>%
     group_by(date) %>%
-    summarise(admissions = sum(admissions), cases = sum(cases), deaths = sum(deaths), n = n()) %>% 
+    summarise(
+      admissions = sum(admissions),
+      cases = sum(cases),
+      deaths = sum(deaths),
+      dose1 = sum(dose1, na.rm=TRUE),
+      dose2 = sum(dose2, na.rm=TRUE),
+      tests = sum(tests),
+      n = n()
+    ) %>% 
     filter(n == 4) %>% 
     select(-n) %>% 
     pivot_longer(-date) %>% 
     mutate(name = name %>% str_to_title) %>% 
-    mutate(name = factor(name, levels=c("Cases", "Admissions", "Deaths")))
+    mutate(name = factor(name, levels=c("Tests", "Cases", "Admissions", "Deaths", "Dose1", "Dose2")))
 }
 
 
-plot_admissions_cases_deaths <- function(gv) {
-  gov_uk <- sum_gov(gv)
+plot_admissions_cases_deaths <- function(gv, by_publish_date = FALSE) {
+  gov_uk <- sum_gov(gv, by_publish_date) %>% 
+    filter(name %in% c("Cases", "Admissions", "Deaths"))
   w <- gov_uk %>%
     arrange(date) %>% 
     mutate(week = lubridate::week(date)) %>%

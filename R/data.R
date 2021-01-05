@@ -89,7 +89,7 @@ get_gov_url_v1 <- function() {
 }
 
 get_gov_url_v2 <- function() {
-  'https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&metric=hospitalCases&metric=newAdmissions&metric=newCasesByPublishDate&metric=newDeaths28DaysByPublishDate&metric=newCasesBySpecimenDate&metric=newDeaths28DaysByDeathDate&format=csv'
+  'https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&metric=hospitalCases&metric=newAdmissions&metric=newCasesByPublishDate&metric=newDeaths28DaysByPublishDate&metric=newCasesBySpecimenDate&metric=newDeaths28DaysByDeathDate&metric=newVirusTests&metric=newPeopleReceivingFirstDose&metric=newPeopleReceivingSecondDose&format=csv'
 }
 
 fetch_gov_data <- function(urlc) {
@@ -106,7 +106,10 @@ process_gov_data <- function(raw) {
       hospital_cases = hospitalCases,
       admissions = newAdmissions,
       deaths = newDeaths28DaysByDeathDate,
-      deaths_pub = newDeaths28DaysByPublishDate
+      deaths_pub = newDeaths28DaysByPublishDate,
+      tests = newVirusTests,
+      dose1 = newPeopleReceivingFirstDose,
+      dose2 = newPeopleReceivingSecondDose
     ) %>% 
     left_join(uk_pop, by="nation") %>% 
     mutate(
