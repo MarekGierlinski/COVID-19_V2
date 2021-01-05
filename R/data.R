@@ -8,7 +8,7 @@ uk_pop <- tibble::tribble(
   "UK", 66435550	
 )
 
-
+url_corona <- "http://coronavirus.data.gov.uk"
 
 
 get_ecdc_url <- function() {

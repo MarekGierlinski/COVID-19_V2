@@ -2,6 +2,13 @@ if(!dir.exists("fig")) dir.create("fig")
 
 shapes <- c(15:18, 0:14)
 okabe_ito_palette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "grey20", "grey40", "grey60", "grey80", "grey90", "black")
+
+british.palette <- c(
+  England = rgb(255, 90, 90, max=255),
+  Scotland = rgb(110, 110, 255, max=255),
+  Wales = rgb(255, 214, 0, max=255),
+  `Northern Ireland` = rgb(20, 185, 90, max=255)
+)
 wd <- c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 
 ukPalette <- c(

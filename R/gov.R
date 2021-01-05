@@ -95,3 +95,38 @@ plot_admissions_cases_deaths <- function(gv, by_publish_date = FALSE) {
     scale_x_date(date_breaks = "1 month", date_labels = "%b")
 }
 
+
+plot_vaccination <- function(gv) {
+  gvf <- gv %>% 
+    filter(dose1 > 0)
+  gvf %>% 
+  ggplot(aes(x=date, y=1e6 * dose1 / population, colour=nation)) +
+    theme_bw() +
+    theme(panel.grid = element_blank()) +
+    geom_line() +
+    geom_point() +
+    scale_colour_manual(values = british.palette) +
+    scale_y_continuous(labels = scales::comma_format(big.mark = ',', decimal.mark = '.'), expand=expansion(mult=c(0,0.05)), limits=c(0, NA)) +
+    scale_x_date(breaks=unique(gvf$date), date_labels = "%d %b") +
+    labs(x="Week ending on", y="Count per million", colour=NULL, title="Weekly count of dose 1")
+}
+
+plot_vaccination_cumul <- function(gv) {
+  gvf <- gv %>% 
+    filter(dose1 > 0) %>%
+    group_by(date, nation) %>%
+    summarise(dose = sum(dose1 / population)) %>%
+    ungroup() %>%
+    group_by(nation) %>% 
+    arrange(date) %>% 
+    mutate(cum_dose = cumsum(dose))
+  ggplot(gvf, aes(x=date, y=100 * cum_dose, colour=nation)) +
+    theme_bw() +
+    theme(panel.grid = element_blank()) +
+    geom_line() +
+    geom_point() +
+    scale_colour_manual(values = british.palette) +
+    scale_y_continuous(labels = scales::comma_format(big.mark = ',', decimal.mark = '.'), expand=expansion(mult=c(0,0.05)), limits=c(0, NA)) +
+    scale_x_date(breaks=unique(gvf$date), date_labels = "%d %b") +
+    labs(x="Week ending on", y="Percentage of population", colour=NULL, title="Cumulative first dose")
+}
