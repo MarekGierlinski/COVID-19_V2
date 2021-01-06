@@ -19,3 +19,4 @@ plan <- bind_rows(
 
 cfg <- drake_config(plan)
 
+# clean(ecdc_raw, gov_raw, ft_raw); r_make()
