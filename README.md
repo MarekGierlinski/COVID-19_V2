@@ -1,6 +1,12 @@
 # Processing and visualisation of COVID-19 data
 
-These scripts read, process and created figures for COVID data from ECDC, UK government and Financial Times (death excess data).
+## Sources
+
+The following data sources are used:
+
+ - ECDC - provides with weekly cases/deaths data from all countries around the world.
+ - UK government - provides daily data about cases, deaths, hospital admissions, testing, vaccination and more.
+ - Financial Times - their GitHub repository contains processed data about mortality excess in selected countries.
 
 ## How to use
 
