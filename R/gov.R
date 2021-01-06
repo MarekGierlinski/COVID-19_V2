@@ -104,7 +104,7 @@ plot_vaccination <- function(gv) {
     theme(panel.grid = element_blank()) +
     geom_line() +
     geom_point() +
-    scale_colour_manual(values = british.palette) +
+    scale_colour_manual(values = uk_palette) +
     scale_y_continuous(labels = scales::comma_format(big.mark = ',', decimal.mark = '.'), expand=expansion(mult=c(0,0.05)), limits=c(0, NA)) +
     scale_x_date(breaks=unique(gvf$date), date_labels = "%d %b") +
     labs(x="Week ending on", y="Count per million", colour=NULL, title="Weekly count of dose 1")
@@ -124,7 +124,7 @@ plot_vaccination_cumul <- function(gv) {
     theme(panel.grid = element_blank()) +
     geom_line() +
     geom_point() +
-    scale_colour_manual(values = british.palette) +
+    scale_colour_manual(values = uk_palette) +
     scale_y_continuous(labels = scales::comma_format(big.mark = ',', decimal.mark = '.'), expand=expansion(mult=c(0,0.05)), limits=c(0, NA)) +
     scale_x_date(breaks=unique(gvf$date), date_labels = "%d %b") +
     labs(x="Week ending on", y="Percentage of population", colour=NULL, title="Cumulative first dose")
