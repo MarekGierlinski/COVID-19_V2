@@ -63,7 +63,7 @@ plot_countries_line <- function(cvd, sel=NULL, what="cases", n.col=NULL) {
 
 
 plot_countries_hysteresis <- function(cvd, sel) {
-  brk <- seq.Date(as.Date("2020-01-01"), as.Date("2020-12-01"), by = "1 month")
+  brk <- seq.Date(as.Date("2020-01-01"), as.Date("2021-12-01"), by = "2 months")
   lbs <- format(brk, "%b")
   cvd %>%
     filter(country %in% sel & date >= as.Date("2020-02-15")) %>%
@@ -87,12 +87,12 @@ plot_heatmap_clust <- function(cvd, sel=NULL, mx.limit=10, pop.limit=1e6) {
   tab <- cvd %>% 
     filter(date > as.Date("2020-04-01")) %>% 
     group_by(country) %>% 
-    mutate(value = 1e6 * cases / population, mx = max(value)) %>% 
+    mutate(value = 1e6 * cases / (population * 7), mx = max(value)) %>% 
     ungroup() %>% 
     filter(mx >= mx.limit & population >= pop.limit) %>% 
     pivot_wider(id_cols = country, names_from = date, values_from = value, values_fill = 0) %>% 
     as.data.frame() %>% 
     column_to_rownames("country")
   
-  ggheatmap(tab, palette="viridis", order.col = FALSE, with.y.text = TRUE)
+  ggheatmap(tab, palette="viridis", order.col = FALSE, with.y.text = TRUE, legend.name="Cases per million")
 }

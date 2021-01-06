@@ -6,7 +6,7 @@ plan_figures <- function() {
     fig_ecdc_deaths_col = plot_countries_col(ecdc, sel1, what="deaths") %>% sz(8, 6, url_ecdc),
     fig_ecdc_deaths_ridge = plot_countries_ridge(ecdc, sel1, "deaths", scl=0.1) %>% sz(6, 8, url_ecdc),
     fig_ecdc_histeresis = plot_countries_hysteresis(ecdc, sel1) %>% sz(8, 6, url_ecdc),
-    
+    fig_ecdc_heatmap = plot_heatmap_clust(ecdc, mx.limit=100) %>% sz(8, 10, url_ecdc),
     fig_ecdc_cases_all = plot_countries_line(ecdc, what="cases", n.col=18) %>% sz(26, 16, url_ecdc)
   )
   
