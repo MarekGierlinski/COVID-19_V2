@@ -1,8 +1,7 @@
 plot_gov_weekly_val <- function(gv, what) {
-  vl <- glue("{what}_pop")
-  
   d <- gv %>%
-    select(date, nation, value = !!sym(vl))
+    select(date, nation, population, value = !!sym(what)) %>% 
+    mutate(value = 1e6 * value / population)
 
   w <- d %>%
     arrange(date) %>% 

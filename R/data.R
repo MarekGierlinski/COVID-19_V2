@@ -8,6 +8,7 @@ uk_pop <- tibble::tribble(
   "UK", 66435550	
 )
 
+# for figure annotation only
 url_corona <- "http://coronavirus.data.gov.uk"
 
 
@@ -84,12 +85,29 @@ process_ft_data <- function(raw) {
 
 ##########################################################
 
-get_gov_url_v1 <- function() {
-  'https://api.coronavirus.data.gov.uk/v1/data?filters=areaType=nation&structure={"areaType":"areaType","areaName":"areaName","areaCode":"areaCode","date":"date","newCasesBySpecimenDate":"newCasesBySpecimenDate","cumCasesBySpecimenDate":"cumCasesBySpecimenDate","hospitalCases":"hospitalCases","newAdmissions":"newAdmissions","newDeaths28DaysByDeathDate":"newDeaths28DaysByDeathDate"}&format=csv'
-}
+# Obsolete
+# get_gov_url_v1 <- function() {
+#   'https://api.coronavirus.data.gov.uk/v1/data?filters=areaType=nation&structure={"areaType":"areaType","areaName":"areaName","areaCode":"areaCode","date":"date","newCasesBySpecimenDate":"newCasesBySpecimenDate","cumCasesBySpecimenDate":"cumCasesBySpecimenDate","hospitalCases":"hospitalCases","newAdmissions":"newAdmissions","newDeaths28DaysByDeathDate":"newDeaths28DaysByDeathDate"}&format=csv'
+# }
+
+# Metrics to read from coronavirus.gov.uk. Values are metrics, names are used to
+# rename them into more convenient variables.
+
+gov_metrics <-   list(
+  cases = "newCasesBySpecimenDate",
+  cases_pub = "newCasesByPublishDate",
+  hospital_cases = "hospitalCases",
+  admissions = "newAdmissions",
+  deaths = "newDeaths28DaysByDeathDate",
+  deaths_pub = "newDeaths28DaysByPublishDate",
+  tests = "newVirusTests",
+  dose1 = "newPeopleReceivingFirstDose",
+  dose2 = "newPeopleReceivingSecondDose"
+) 
 
 get_gov_url_v2 <- function() {
-  'https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&metric=hospitalCases&metric=newAdmissions&metric=newCasesByPublishDate&metric=newDeaths28DaysByPublishDate&metric=newCasesBySpecimenDate&metric=newDeaths28DaysByDeathDate&metric=newVirusTests&metric=newPeopleReceivingFirstDose&metric=newPeopleReceivingSecondDose&format=csv'
+  metrics <- paste(glue("metric={gov_metrics}"), collapse="&")
+  glue("https://api.coronavirus.data.gov.uk/v2/data?areaType=nation&{metrics}&format=csv")
 }
 
 fetch_gov_data <- function(urlc) {
@@ -99,27 +117,9 @@ fetch_gov_data <- function(urlc) {
 process_gov_data <- function(raw) {
   d <- raw %>% 
     select(-c(areaType, areaCode)) %>% 
-    rename(
-      nation = areaName,
-      cases = newCasesBySpecimenDate,
-      cases_pub = newCasesByPublishDate,
-      hospital_cases = hospitalCases,
-      admissions = newAdmissions,
-      deaths = newDeaths28DaysByDeathDate,
-      deaths_pub = newDeaths28DaysByPublishDate,
-      tests = newVirusTests,
-      dose1 = newPeopleReceivingFirstDose,
-      dose2 = newPeopleReceivingSecondDose
-    ) %>% 
-    left_join(uk_pop, by="nation") %>% 
-    mutate(
-      cases_pop = 1e6 * cases / population,
-      cases_pub_pop = 1e6 * cases_pub / population,
-      hospital_cases_pop = 1e6 * hospital_cases / population,
-      admissions_pop = 1e6 * admissions / population,
-      deaths_pop = 1e6 * deaths / population,
-      deaths_pub_pop = 1e6 * deaths_pub / population
-    )
+    rename(nation = areaName) %>% 
+    rename(!!!gov_metrics) %>% 
+    left_join(uk_pop, by="nation")
   print(paste("GOV last date", max(d$date)))
   d
 }
