@@ -51,12 +51,6 @@ process_ecdc_data <- function(raw) {
     ungroup() %>% 
     filter(
       country != "Cases on an international conveyance Japan"
-    ) %>% 
-    mutate(
-      cases_pop = 1e6 * cases / population,
-      deaths_pop = 1e6 * deaths/ population,
-      cum_cases_pop = 1e6 * cum_cases / population,
-      cum_deaths_pop = 1e6 * cum_deaths/ population
     )
   print(paste("ECDC last date", max(d$date)))
   d

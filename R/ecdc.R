@@ -1,6 +1,6 @@
 plot_countries_col <- function(cvd, sel, what="cases") {
   d <- cvd %>%
-    mutate(value = !!sym(glue("{what}_pop")), value = value / 7) %>% 
+    mutate(value = 1e6 * !!sym(what) / population, value = value / 7) %>% 
     filter(country %in% sel & date >= as.Date("2020-02-15")) %>% 
     arrange(date)
   
@@ -20,7 +20,7 @@ plot_countries_col <- function(cvd, sel, what="cases") {
 
 plot_countries_ridge <- function(cvd, sel, what="cases", scl=0.1) {
   d <- cvd %>%
-    mutate(value = !!sym(glue("{what}_pop")), value = value / 7) %>% 
+    mutate(value = 1e6 * !!sym(what) / population, value = value / 7) %>% 
     filter(country %in% sel & date >= as.Date("2020-02-15") & value >= 0) %>% 
     arrange(date)
   
@@ -37,7 +37,7 @@ plot_countries_ridge <- function(cvd, sel, what="cases", scl=0.1) {
 
 plot_countries_line <- function(cvd, sel=NULL, what="cases", n.col=NULL) {
   d <- cvd %>%
-    mutate(value = !!sym(glue("{what}_pop")), value = value / 7) %>% 
+    mutate(value = 1e6 * !!sym(what) / population, value = value / 7) %>% 
     filter(date >= as.Date("2020-02-15")) %>% 
     arrange(date) %>% 
     filter(value > 0) %>% 
@@ -67,7 +67,7 @@ plot_countries_hysteresis <- function(cvd, sel) {
   lbs <- format(brk, "%b")
   cvd %>%
     filter(country %in% sel & date >= as.Date("2020-02-15")) %>%
-    ggplot(aes(x=cases_pop/7, y=deaths_pop/7, group=country, colour=date)) +
+    ggplot(aes(x=1e6 * cases / (7 * population), y=1e6*deaths/(7*population), group=country, colour=date)) +
     theme_bw() +
     theme(panel.grid = element_blank(), text=element_text(size=8)) +
     geom_path() +
@@ -87,7 +87,7 @@ plot_heatmap_clust <- function(cvd, sel=NULL, mx.limit=10, pop.limit=1e6) {
   tab <- cvd %>% 
     filter(date > as.Date("2020-04-01")) %>% 
     group_by(country) %>% 
-    mutate(mx = max(cases_pop), value = cases_pop) %>% 
+    mutate(value = 1e6 * cases / population, mx = max(value)) %>% 
     ungroup() %>% 
     filter(mx >= mx.limit & population >= pop.limit) %>% 
     pivot_wider(id_cols = country, names_from = date, values_from = value, values_fill = 0) %>% 
