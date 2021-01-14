@@ -20,9 +20,9 @@ plan_figures <- function() {
   
   gov_figures <- drake_plan(
     fig_gov_separate = plot_gov_weekly(gov) %>% sz(9, 8, url_corona),
-    fig_gov_aggregated = plot_admissions_cases_deaths(gov) %>% sz(7, 4, url_corona),
-    fig_vaccinations = plot_vaccination(gov) %>% sz(5, 3, url_corona),
-    fig_vaccinations_cumul = plot_vaccination_cumul(gov) %>% sz(5, 3, url_corona)
+    fig_gov_aggregated_sample = plot_admissions_cases_deaths(gov, by_publish_date = FALSE) %>% sz(7, 4, url_corona),
+    fig_gov_aggregated_publish = plot_admissions_cases_deaths(gov, by_publish_date = TRUE) %>% sz(7, 4, url_corona),
+    fig_vaccinations = plot_vaccination(gov) %>% sz(6, 4, url_corona),
   )
   
   fig_plan <- figs_from_plan(bind_rows(ecdc_figures, excess_figures, gov_figures))

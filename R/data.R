@@ -95,8 +95,12 @@ gov_metrics <-   list(
   deaths = "newDeaths28DaysByDeathDate",
   deaths_pub = "newDeaths28DaysByPublishDate",
   tests = "newVirusTests",
-  dose1 = "newPeopleReceivingFirstDose",
-  dose2 = "newPeopleReceivingSecondDose"
+  weekly_dose1 = "weeklyPeopleVaccinatedFirstDoseByVaccinationDate",
+  weekly_dose2 = "weeklyPeopleVaccinatedSecondDoseByVaccinationDate",
+  dose1 = "newPeopleVaccinatedFirstDoseByPublishDate",
+  dose2 = "newPeopleVaccinatedSecondDoseByPublishDate",
+  cum_dose1 = "cumPeopleVaccinatedFirstDoseByPublishDate",
+  cum_dose2 = "cumPeopleVaccinatedSecondDoseByPublishDate"
 ) 
 
 get_gov_url_v2 <- function() {

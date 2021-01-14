@@ -64,7 +64,8 @@ sum_gov <- function(gv, by_publish_date = FALSE) {
 
 
 plot_admissions_cases_deaths <- function(gv, by_publish_date = FALSE) {
-  gov_uk <- sum_gov(gv, by_publish_date) %>% 
+  tit <- ifelse(by_publish_date, "By publish date", "By sample/death date")
+  gov_uk <- sum_gov(gv %>% filter(date >= "2020-03-01"), by_publish_date) %>% 
     filter(name %in% c("Cases", "Admissions", "Deaths"))
   w <- gov_uk %>%
     arrange(date) %>% 
@@ -90,42 +91,42 @@ plot_admissions_cases_deaths <- function(gv, by_publish_date = FALSE) {
     geom_step(data=gov_uk, aes(x=date, y=value, colour=name), alpha=0.3) +
     geom_step(data=ww, aes(x=week_date, y=value, colour=name), size=1) +
     scale_colour_manual(values=okabe_ito_palette) +
-    labs(x=NULL, y="Daily count", colour=NULL) +
+    labs(x=NULL, y="Daily count", colour=NULL, title=tit) +
     scale_x_date(date_breaks = "1 month", date_labels = "%b")
 }
 
 
 plot_vaccination <- function(gv) {
-  gvf <- gv %>% 
-    filter(dose1 > 0)
-  gvf %>% 
-  ggplot(aes(x=date, y=1e6 * dose1 / population, colour=nation)) +
+  # include older weekly reports
+  gw <- gv %>% 
+    filter(weekly_dose1 > 0 | weekly_dose2 > 0) %>% 
+    select(date, weekly_dose1, weekly_dose2, population, nation) %>% 
+    pivot_longer(cols=c("weekly_dose1", "weekly_dose2"), names_to="dose", values_to="count") %>% 
+    mutate(dose = recode(dose, weekly_dose1 = "First dose", weekly_dose2 = "Second dose")) %>% 
+    arrange(date) %>% 
+    group_by(nation, dose) %>% 
+    mutate(cumulative = 100 * cumsum(count) / population) %>% 
+    ungroup()
+  
+  
+  gd <- gv %>% 
+    filter(cum_dose1 > 0) %>% 
+    select(date, cum_dose1, cum_dose2, population, nation) %>% 
+    pivot_longer(cols=c("cum_dose1", "cum_dose2"), names_to="dose", values_to="count") %>% 
+    mutate(dose = recode(dose, cum_dose1 = "First dose", cum_dose2 = "Second dose")) %>% 
+    mutate(cumulative = 100 * count / population) 
+  
+  gf <- bind_rows(gw, gd) 
+  
+  ggplot(gf, aes(x=date, y=cumulative, colour=nation, shape=dose)) +
     theme_bw() +
     theme(panel.grid = element_blank()) +
     geom_line() +
-    geom_point() +
+    geom_point(fill="white") +
     scale_colour_manual(values = uk_palette) +
+    scale_shape_manual(values = c(19, 21)) +
     scale_y_continuous(labels = scales::comma_format(big.mark = ',', decimal.mark = '.'), expand=expansion(mult=c(0,0.05)), limits=c(0, NA)) +
-    scale_x_date(breaks=unique(gvf$date), date_labels = "%d %b") +
-    labs(x="Week ending on", y="Count per million", colour=NULL, title="Weekly count of dose 1")
+    scale_x_date() +
+    labs(x="Date", y="Percentage of population vaccinated", colour=NULL, shape=NULL, title="Vaccination progress in the UK")
 }
 
-plot_vaccination_cumul <- function(gv) {
-  gvf <- gv %>% 
-    filter(dose1 > 0) %>%
-    group_by(date, nation) %>%
-    summarise(dose = sum(dose1 / population)) %>%
-    ungroup() %>%
-    group_by(nation) %>% 
-    arrange(date) %>% 
-    mutate(cum_dose = cumsum(dose))
-  ggplot(gvf, aes(x=date, y=100 * cum_dose, colour=nation)) +
-    theme_bw() +
-    theme(panel.grid = element_blank()) +
-    geom_line() +
-    geom_point() +
-    scale_colour_manual(values = uk_palette) +
-    scale_y_continuous(labels = scales::comma_format(big.mark = ',', decimal.mark = '.'), expand=expansion(mult=c(0,0.05)), limits=c(0, NA)) +
-    scale_x_date(breaks=unique(gvf$date), date_labels = "%d %b") +
-    labs(x="Week ending on", y="Percentage of population", colour=NULL, title="Cumulative first dose")
-}
