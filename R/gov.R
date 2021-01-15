@@ -1,11 +1,23 @@
+week_from_first_monday <- function(dt) {
+  # weekly data starting on the first Monday in data set
+  wk <- tibble(date = dt) %>% 
+    arrange(date) %>% 
+    mutate(wday = lubridate::wday(date, week_start=1))
+  
+  first_monday <- wk %>% filter(wday == 1) %>% pull(date) %>% first()
+  
+  week <-  floor(as.integer(dt - first_monday) / 7) + 1
+}
+
+
 plot_gov_weekly_val <- function(gv, what) {
   d <- gv %>%
     select(date, nation, population, value = !!sym(what)) %>% 
     mutate(value = 1e6 * value / population)
-
-  w <- d %>%
+  
+  w <- d %>% 
     arrange(date) %>% 
-    mutate(week = lubridate::week(date)) %>%
+    mutate(week = week_from_first_monday(date)) %>% 
     group_by(nation, week) %>%
     summarise(value = mean(value), n = n(), week_date = first(date)) %>% 
     ungroup() %>% 
@@ -68,8 +80,7 @@ plot_admissions_cases_deaths <- function(gv, by_publish_date = FALSE) {
   gov_uk <- sum_gov(gv %>% filter(date >= "2020-03-01"), by_publish_date) %>% 
     filter(name %in% c("Cases", "Admissions", "Deaths"))
   w <- gov_uk %>%
-    arrange(date) %>% 
-    mutate(week = lubridate::week(date)) %>%
+    mutate(week = week_from_first_monday(date)) %>% 
     group_by(name, week) %>%
     summarise(value = mean(value), n = n(), week_date = first(date)) %>% 
     ungroup() %>% 
