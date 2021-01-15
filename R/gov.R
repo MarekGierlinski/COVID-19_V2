@@ -43,14 +43,15 @@ plot_gov_weekly_val <- function(gv, what) {
     facet_wrap(~nation, scale="fixed", ncol=4) +
     labs(x=NULL, y=glue("Daily {what} per million")) +
     scale_y_continuous(labels = scales::comma_format(big.mark = ',', decimal.mark = '.'), expand=expansion(mult=c(0,0.05)), limits=c(0, NA)) +
-    scale_x_date(date_breaks = "2 months", date_labels = "%b")
+    scale_x_date(date_breaks = "2 months", date_labels = "%b", limits=c(as.Date("2020-03-01"), max(d$date)))
 }
 
 plot_gov_weekly <- function(gv) {
-  map(c("cases", "admissions", "deaths"), function(vl) {
-    plot_gov_weekly_val(gv, vl)
+  last_date <- max(gv$date, na.rm=TRUE)
+  map(c("tests", "cases", "admissions", "deaths"), function(vl) {
+    plot_gov_weekly_val(gv, vl) 
   }) %>% 
-    plot_grid(plotlist = ., ncol = 1)
+    plot_grid(plotlist = ., ncol = 1, align="v")
 }
 
 
@@ -78,7 +79,7 @@ sum_gov <- function(gv, by_publish_date = FALSE) {
 plot_admissions_cases_deaths <- function(gv, by_publish_date = FALSE) {
   tit <- ifelse(by_publish_date, "By publish date", "By sample/death date")
   gov_uk <- sum_gov(gv %>% filter(date >= "2020-03-01"), by_publish_date) %>% 
-    filter(name %in% c("Cases", "Admissions", "Deaths"))
+    filter(name %in% c("Tests", "Cases", "Admissions", "Deaths"))
   w <- gov_uk %>%
     mutate(week = week_from_first_monday(date)) %>% 
     group_by(name, week) %>%
