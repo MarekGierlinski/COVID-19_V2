@@ -99,6 +99,7 @@ plot_admissions_cases_deaths <- function(gv, by_publish_date = FALSE) {
 plot_vaccination <- function(gv) {
   # include older weekly reports
   gw <- gv %>% 
+    filter(date < "2021-01-05") %>% 
     filter(weekly_dose1 > 0 | weekly_dose2 > 0) %>% 
     select(date, weekly_dose1, weekly_dose2, population, nation) %>% 
     pivot_longer(cols=c("weekly_dose1", "weekly_dose2"), names_to="dose", values_to="count") %>% 
@@ -127,6 +128,14 @@ plot_vaccination <- function(gv) {
     scale_shape_manual(values = c(19, 21)) +
     scale_y_continuous(labels = scales::comma_format(big.mark = ',', decimal.mark = '.'), expand=expansion(mult=c(0,0.05)), limits=c(0, NA)) +
     scale_x_date() +
-    labs(x="Date", y="Percentage of population vaccinated", colour=NULL, shape=NULL, title="Vaccination progress in the UK")
+    labs(x="Date", y="Percentage of population vaccinated", colour=NULL, shape=NULL, title="COVID-19 vaccination in the UK")
 }
 
+plot_vaccination_target <- function(gov) {
+  target <- 100 * 13.9e6 / uk_pop$population[5]
+  plot_vaccination(gov) +
+    geom_vline(xintercept = as.Date("2021-02-15"), linetype="dashed") +
+    geom_hline(yintercept = target, linetype="dashed") +
+    xlim(as.Date(c("2020-12-12", "2021-02-17"))) +
+    labs(title="Vaccination target")
+}

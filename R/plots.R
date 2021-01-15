@@ -36,7 +36,7 @@ figs_from_plan <- function(plan) {
 annotate_save <- function(filename, g) {
   ann <- ggplot() +
     xlim(0, 1) +
-    annotate("text", label=glue::glue("Source: {g$source}"), hjust=0, x=0, y=0, size=2, colour="grey50") +
+    annotate("text", label=g$source, hjust=0, x=0, y=0, size=2, colour="grey50") +
     theme_nothing() +
     theme(plot.margin = unit(c(-5,0,-5,-5), "mm"))
   plt <- plot_grid(g ,ann, ncol=1, rel_heights = c(20, 1))

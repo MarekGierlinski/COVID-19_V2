@@ -1,16 +1,21 @@
-# 2018 population, source: Wikipedia
+# 2019 population, source: Wikipedia
 uk_pop <- tibble::tribble(
   ~nation, ~population,
-  "England", 55977178,
-  "Scotland", 5438100,
-  "Wales", 3138631,
-  "Northern Ireland", 1881641,
-  "UK", 66435550	
+  "England", 56286961,
+  "Scotland", 5463300,
+  "Wales", 3152879,
+  "Northern Ireland", 1893667,
+  "UK", 66796807
 )
 
 # for figure annotation only
 url_corona <- "http://coronavirus.data.gov.uk"
 
+
+get_time_stamp <- function(dat, src) {
+  ts <- format(Sys.time(), "%d-%b-%Y %X")
+  glue("Source: {src}, accessed on {ts}")
+}
 
 get_ecdc_url <- function() {
   urlc <- "https://opendata.ecdc.europa.eu/covid19/casedistribution/csv"
