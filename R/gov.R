@@ -124,12 +124,18 @@ plot_vaccination <- function(gv) {
   
   gd <- gv %>% 
     filter(cum_dose1 > 0) %>% 
+    mutate(
+      cum_dose1 = if_else(is.na(dose1) | dose1 > 0, cum_dose1, as.numeric(NA)),
+      cum_dose2 = if_else(is.na(dose2) | dose1 > 0, cum_dose2, as.numeric(NA))
+    ) %>% 
     select(date, cum_dose1, cum_dose2, population, nation) %>% 
     pivot_longer(cols=c("cum_dose1", "cum_dose2"), names_to="dose", values_to="count") %>% 
     mutate(dose = recode(dose, cum_dose1 = "First dose", cum_dose2 = "Second dose")) %>% 
     mutate(cumulative = 100 * count / population) 
   
-  gf <- bind_rows(gw, gd) 
+  gf <- bind_rows(gw, gd) %>% 
+    drop_na() %>% 
+    filter(count > 0)
   
   ggplot(gf, aes(x=date, y=cumulative, colour=nation, shape=dose)) +
     theme_bw() +
