@@ -4,7 +4,9 @@ plan_data <- function() {
     url_ecdc = get_ecdc_url(),
     ecdc_raw = fetch_ecdc_data(url_ecdc),
     ecdc = process_ecdc_data(ecdc_raw),
-    time_stamp_ecdc = get_time_stamp(ecdc_raw, url_ecdc)
+    time_stamp_ecdc = get_time_stamp(ecdc_raw, url_ecdc),
+    top_recent_cases = select_top_recent(ecdc, "cases", n=12),
+    top_recent_deaths = select_top_recent(ecdc, "deaths", n=12)
   )
   
   ft_data <- drake_plan(

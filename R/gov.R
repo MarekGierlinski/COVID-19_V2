@@ -21,7 +21,7 @@ plot_gov_weekly_val <- function(gv, what) {
     group_by(nation, week) %>%
     summarise(value = mean(value), n = n(), week_date = first(date)) %>% 
     ungroup() %>% 
-    filter(n == 7) %>% 
+    filter(n >= 6) %>% 
     drop_na()
   # add one more point in cases and deaths for nice line ending
   ww <- w %>% 
@@ -83,15 +83,15 @@ plot_admissions_cases_deaths <- function(gv, by_publish_date = FALSE) {
   w <- gov_uk %>%
     mutate(week = week_from_first_monday(date)) %>% 
     group_by(name, week) %>%
-    summarise(value = mean(value), n = n(), week_date = first(date)) %>% 
+    summarise(m = mean(value, na.rm=TRUE), n = sum(!is.na(value)), s = sd(value, na.rm=TRUE) / sqrt(n), week_date = first(date)) %>% 
     ungroup() %>% 
-    filter(n == 7)
+    filter(n >= 6)
   # add one more point in cases and deaths for nice line ending
   ww <- w %>% 
     group_split(name) %>% 
     map_dfr(function(x) {
       x %>% 
-        add_row(week=last(x$week)+1,  value=last(x$value), week_date=last(x$week_date)+7, name=first(x$name))
+        add_row(week=last(x$week)+1,  m=last(x$m), s=NA, week_date=last(x$week_date)+7, name=first(x$name))
     })
   
   ggplot() +
@@ -99,9 +99,10 @@ plot_admissions_cases_deaths <- function(gv, by_publish_date = FALSE) {
     theme(
       panel.grid.minor = element_blank()
     ) +
-    scale_y_log10(label=scales::comma) +
+    scale_y_log10(label=scales::comma, breaks=10^(0:7)) +
     geom_step(data=gov_uk, aes(x=date, y=value, colour=name), alpha=0.3) +
-    geom_step(data=ww, aes(x=week_date, y=value, colour=name), size=1) +
+    geom_step(data=ww, aes(x=week_date, y=m, colour=name), size=1) +
+    #geom_errorbar(data=ww, aes(x=week_date+3.5, ymin=m-s, ymax=m+s), width=2, colour="grey") +
     scale_colour_manual(values=okabe_ito_palette) +
     labs(x=NULL, y="Daily count", colour=NULL, title=tit) +
     scale_x_date(date_breaks = "1 month", date_labels = "%b")

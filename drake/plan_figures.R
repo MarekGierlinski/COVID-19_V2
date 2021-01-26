@@ -2,11 +2,11 @@ plan_figures <- function() {
   
   ecdc_figures <- drake_plan(
     fig_ecdc_cases_col = plot_countries_col(ecdc, sel1, what="cases") %>% sz(8, 6, time_stamp_ecdc),
-    fig_ecdc_cases_ridge = plot_countries_ridge(ecdc, sel1, "cases", scl=0.002) %>% sz(6, 8, time_stamp_ecdc),
+    fig_ecdc_cases_top = plot_countries_col(ecdc, top_recent_cases, what="cases", title="Top 12 countries with highest recent case rate", subtitle="(only countries with population over 1 million included)") %>% sz(8, 6, time_stamp_ecdc),
     fig_ecdc_deaths_col = plot_countries_col(ecdc, sel1, what="deaths") %>% sz(8, 6, time_stamp_ecdc),
-    fig_ecdc_deaths_ridge = plot_countries_ridge(ecdc, sel1, "deaths", scl=0.1) %>% sz(6, 8, time_stamp_ecdc),
-    fig_ecdc_histeresis = plot_countries_hysteresis(ecdc, sel1) %>% sz(8, 6, time_stamp_ecdc),
-    fig_ecdc_heatmap = plot_heatmap_clust(ecdc, mx.limit=100) %>% sz(8, 10, time_stamp_ecdc),
+    fig_ecdc_deaths_top = plot_countries_col(ecdc, top_recent_deaths, what="deaths", title="Top 12 countries with highest recent death rate", subtitle="(only countries with population over 1 million included)") %>% sz(8, 6, time_stamp_ecdc),
+    fig_ecdc_hysteresis = plot_countries_hysteresis(ecdc, sel1) %>% sz(8, 6, time_stamp_ecdc),
+    #fig_ecdc_heatmap = plot_heatmap_clust(ecdc, mx.limit=100) %>% sz(8, 10, time_stamp_ecdc),
     fig_ecdc_cases_all = plot_countries_line(ecdc, what="cases", n.col=18) %>% sz(26, 16, time_stamp_ecdc)
   )
   

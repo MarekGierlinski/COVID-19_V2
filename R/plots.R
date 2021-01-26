@@ -81,7 +81,7 @@ ggheatmap <- function(tab, order.col = TRUE, order.row = TRUE, dendro.line.size 
   
   mx <- max(abs(d$value), na.rm=TRUE)
   heat_plot <- ggplot(d, aes(x = variable, y = rowname, fill = value)) + 
-    geom_tile() + 
+    geom_tile(width=7) + 
     theme_classic() +
     theme(
       axis.line = element_blank(),

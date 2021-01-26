@@ -18,7 +18,8 @@ get_time_stamp <- function(dat, src) {
 }
 
 get_ecdc_url <- function() {
-  urlc <- "https://opendata.ecdc.europa.eu/covid19/casedistribution/csv"
+  urlc <- "https://opendata.ecdc.europa.eu/covid19/nationalcasedeath/csv"
+  #urlc <- "https://opendata.ecdc.europa.eu/covid19/casedistribution/csv"
   stopifnot(url.exists(urlc))
   urlc
 }
@@ -27,31 +28,31 @@ fetch_ecdc_data <- function(urlc) {
   read_csv(urlc, col_types = cols())
 }
 
+date_from_week <- function(d) {
+  d %>% 
+    separate(year_week, c("year", "week"), sep="-", remove=FALSE) %>% 
+    mutate_at(c("year", "week"), as.integer) %>% 
+    group_split(year) %>% 
+    map_dfr(function(w) {
+      start_date <- ymd(paste(min(w$year), "-01-01"))
+      mon <- wday(start_date, week_start = 1)
+      mon_dif = 8 - mon
+      w %>%
+        mutate(date = start_date + weeks(week - 1))
+    })
+}
+
 process_ecdc_data <- function(raw) {
   d <- raw %>% 
     rename(
-      country = countriesAndTerritories,
-      code = countryterritoryCode,
-      geo_id = geoId,
-      cases = cases_weekly,
-      deaths = deaths_weekly,
-      population = popData2019,
-      continent = continentExp
+      count = weekly_count,
+      rate = rate_14_day
     ) %>%
-    mutate(
-      country = str_replace_all(country, "_", " "),
-      country = recode(country, 'United States of America' = "United States"),
-      code = recode(code, "XKX" = "KOS"),
-      date = as.Date(dateRep, format="%d/%m/%Y")
-    ) %>% 
-    select(-dateRep) %>% 
-    separate(year_week, c("year", "week")) %>% 
+    date_from_week() %>% 
     group_by(country) %>% 
     arrange(date) %>% 
     mutate(
-      tot_cases = sum(cases),
-      cum_cases = cumsum(cases),
-      cum_deaths = cumsum(deaths)
+      tot_count = sum(count)
     ) %>% 
     ungroup() %>% 
     filter(

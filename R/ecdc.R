@@ -1,6 +1,8 @@
-plot_countries_col <- function(cvd, sel, what="cases") {
+plot_countries_col <- function(cvd, sel, what="cases", title=NULL, subtitle=NULL) {
   d <- cvd %>%
-    mutate(value = 1e6 * !!sym(what) / population, value = value / 7) %>% 
+    filter(indicator == what) %>% 
+    #mutate(value = 1e6 * count / population, value = value / 7) %>% 
+    mutate(value = rate) %>% 
     filter(country %in% sel & date >= as.Date("2020-02-15")) %>% 
     arrange(date)
   
@@ -13,14 +15,15 @@ plot_countries_col <- function(cvd, sel, what="cases") {
     #geom_point(size=0.6) +
     geom_col(width=7, fill="grey40") +
     facet_wrap(~country, scale="free_y") +
-    labs(x=NULL, y=glue("Daily {what} per million")) +
+    labs(x=NULL, y=glue("Daily {what} per million"), title=title, subtitle=subtitle) +
     scale_y_continuous(labels = scales::comma_format(big.mark = ',', decimal.mark = '.'), expand=expansion(mult=c(0,0.05)), limits=c(0, NA)) +
     scale_x_date(date_breaks = "2 months", date_labels = "%b")
 }
 
 plot_countries_ridge <- function(cvd, sel, what="cases", scl=0.1) {
   d <- cvd %>%
-    mutate(value = 1e6 * !!sym(what) / population, value = value / 7) %>% 
+    filter(indicator == what) %>% 
+    mutate(value = 1e6 * count / population, value = value / 7) %>% 
     filter(country %in% sel & date >= as.Date("2020-02-15") & value >= 0) %>% 
     arrange(date)
   
@@ -37,7 +40,8 @@ plot_countries_ridge <- function(cvd, sel, what="cases", scl=0.1) {
 
 plot_countries_line <- function(cvd, sel=NULL, what="cases", n.col=NULL) {
   d <- cvd %>%
-    mutate(value = 1e6 * !!sym(what) / population, value = value / 7) %>% 
+    filter(indicator == what) %>% 
+    mutate(value = 1e6 * count / population, value = value / 7) %>% 
     filter(date >= as.Date("2020-02-15")) %>% 
     arrange(date) %>% 
     filter(value > 0) %>% 
@@ -67,7 +71,10 @@ plot_countries_hysteresis <- function(cvd, sel) {
   lbs <- format(brk, "%b")
   cvd %>%
     filter(country %in% sel & date >= as.Date("2020-02-15")) %>%
-    ggplot(aes(x=1e6 * cases / (7 * population), y=1e6*deaths/(7*population), group=country, colour=date)) +
+    mutate(value = 1e6 * count / (7 * population)) %>% 
+    select(date, country, indicator, value) %>% 
+    pivot_wider(id_cols = c(date, country), names_from = indicator, values_from = value) %>% 
+    ggplot(aes(x=cases, y=deaths, group=country, colour=date)) +
     theme_bw() +
     theme(panel.grid = element_blank(), text=element_text(size=8)) +
     geom_path() +
@@ -85,9 +92,9 @@ plot_heatmap_clust <- function(cvd, sel=NULL, mx.limit=10, pop.limit=1e6) {
   if(!is.null(sel)) cvd <- cvd %>% filter(country %in% sel)
   
   tab <- cvd %>% 
-    filter(date > as.Date("2020-04-01")) %>% 
+    filter(date > as.Date("2020-04-01") & indicator == "cases") %>% 
     group_by(country) %>% 
-    mutate(value = 1e6 * cases / (population * 7), mx = max(value)) %>% 
+    mutate(value = 1e6 * count / (population * 7), mx = max(value)) %>% 
     ungroup() %>% 
     filter(mx >= mx.limit & population >= pop.limit) %>% 
     pivot_wider(id_cols = country, names_from = date, values_from = value, values_fill = 0) %>% 
@@ -95,4 +102,18 @@ plot_heatmap_clust <- function(cvd, sel=NULL, mx.limit=10, pop.limit=1e6) {
     column_to_rownames("country")
   
   ggheatmap(tab, palette="viridis", order.col = FALSE, with.y.text = TRUE, legend.name="Cases per million")
+}
+
+select_top_recent <- function(cvd, what, n=12) {
+  cvd %>%
+    filter(indicator == what & population>1e6) %>%
+    mutate(val = count / population) %>%
+    select(date, country, val) %>%
+    drop_na() %>%
+    group_by(country) %>%
+    arrange(date) %>%
+    summarise(last_val = last(val)) %>%
+    arrange(desc(last_val)) %>%
+    head(n) %>%
+    pull(country)
 }
