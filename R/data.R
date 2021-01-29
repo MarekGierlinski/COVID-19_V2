@@ -49,8 +49,7 @@ process_ecdc_data <- function(raw) {
       rate = rate_14_day
     ) %>%
     date_from_week() %>% 
-    group_by(country) %>% 
-    arrange(date) %>% 
+    group_by(country, indicator) %>% 
     mutate(
       tot_count = sum(count)
     ) %>% 

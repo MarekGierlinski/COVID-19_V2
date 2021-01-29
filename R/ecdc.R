@@ -117,3 +117,94 @@ select_top_recent <- function(cvd, what, n=12) {
     head(n) %>%
     pull(country)
 }
+
+
+plot_cases_diff_deaths <- function(cvd, pop=FALSE, x.min=NULL) {
+  brkmin <- 0
+  xmin <- 0.05
+  xlab <- "Reported deaths (red) and cases (blue)"
+  if(pop) {
+    cvd <- mutate(cvd, count = 1e6 * count / population)
+    xmin <- 0.005
+    xlab <- paste(xlab, "per million")
+    brkmin <- -3
+  }
+  if(!is.null(x.min)) xmin <- x.min
+  
+  brks <- c(1) * 10^sort(rep(brkmin:6,3))
+  labs <- sprintf("%f", brks) %>% str_remove("0+$") %>% str_remove("\\.$") %>% prettyNum(big.mark = ",") %>% str_remove("^\\s+")
+  
+  d <- cvd %>%
+    filter(!str_detect(country, "total")) %>% 
+    group_by(country, indicator) %>%
+    summarise(count_tot = sum(count)) %>%
+    ungroup() %>% 
+    pivot_wider(id_cols = country, names_from = indicator, values_from = count_tot) %>% 
+    filter(deaths > 0) %>% 
+    mutate(country=fct_reorder(country, deaths), lab=paste0(as.character(country), "  ")) %>% 
+    mutate(font = if_else(country == "United Kingdom", 2, 1))
+  ggplot(d, aes(y=country)) +
+    theme_bw() +
+    geom_segment(aes(x=deaths, xend=cases, y=country, yend=country), colour="grey50") +
+    geom_point(aes(x = cases), shape=21, fill="blue", size=1.5, colour="grey50") +
+    geom_point(aes(x = deaths), shape=21, fill="red", size=1.5, colour="grey50") +
+    geom_text(aes(x=deaths, y=country, label=lab, fontface=font), hjust=1, size=2.5) +
+    scale_x_log10(breaks=brks, labels=labs, limits=c(xmin, max(d$cases)*1.05)) +
+    scale_y_discrete(expand=c(0,1)) +
+    labs(x=xlab, y=NULL) +
+    theme(
+      axis.text.y = element_blank(),
+      axis.ticks.y = element_blank(),
+      text = element_text(size=8),
+      panel.grid.minor = element_blank(),
+      panel.grid.major.y = element_blank()
+    )
+}
+
+plot_cases_deaths_pop <- function(cvd) {
+  d <- cvd %>%
+    filter(!str_detect(country, "total")) %>% 
+    mutate(count = 1e6 * count / population) %>% 
+    group_by(country, population, indicator) %>%
+    summarise(count_tot = sum(count)) %>%
+    ungroup() %>% 
+    pivot_wider(id_cols = c(country, population), names_from = indicator, values_from = count_tot) %>% 
+    filter(deaths > 0) %>% 
+    mutate(font = if_else(country == "United Kingdom", 2, 1))
+  ds <- d %>%
+    filter((cases > 15000 | deaths > 300) | country %in% c("China", "India"))
+  ggplot(d, aes(x=cases, y=deaths, label=country)) +
+    theme_bw() +
+    geom_point(aes(size=population/1e6), colour="grey60")  +
+    geom_text_repel(data=ds, aes(fontface=font), size=2.5) +
+    scale_size_area(max_size = 20, breaks=c(1, 10, 100, 1000)) +
+    labs(x="Reported cases per million", y="Reported deaths per million", size="Population (million)") +
+    scale_x_continuous(labels = scales::comma_format(big.mark = ',', decimal.mark = '.'), expand=expansion(mult=c(0,0.05)), limits=c(0, NA)) +
+    scale_y_continuous(labels = scales::comma_format(big.mark = ',', decimal.mark = '.'), expand=expansion(mult=c(0,0.05)), limits=c(0, NA))
+}
+
+plot_cases_deaths_track <- function(cvd, sel, min.date="2020-09-01", title=NULL) {
+  d <- cvd %>%
+    filter(country %in% sel) %>% 
+    mutate(count = 1e6 * count / population) %>% 
+    group_by(country, indicator) %>% 
+    arrange(date) %>% 
+    mutate(count = cumsum(count)) %>% 
+    select(date, country, population, indicator, count) %>%
+    filter(date >= as.Date(min.date)) %>% 
+    pivot_wider(id_cols = c(date, country, population), names_from = indicator, values_from = count)
+  dt <- d %>% 
+    filter(date == max(date)) %>% 
+    mutate(font = if_else(country == "United Kingdom", 2, 1))
+  ggplot(d, aes(x=cases, y=deaths, colour=date, group=country)) +
+    theme_bw() +
+    theme(panel.grid = element_blank()) +
+    geom_path() +
+    #geom_point(size=0.3) +
+    scale_colour_distiller(palette="RdYlBu", trans="date") +
+    geom_point(data=dt, aes(x=cases, y=deaths, group=1), colour="black") +
+    geom_text_repel(data=dt, aes(x=cases, y=deaths, label=country, fontface=font), colour="black", size=2.5) +
+    labs(x="Cumulative cases per million", y="Cumulative deaths per million", title=title, colour=NULL) +
+    scale_x_continuous(labels = scales::comma_format(big.mark = ',', decimal.mark = '.'), expand=expansion(mult=c(0,0.05)), limits=c(0, NA)) +
+    scale_y_continuous(labels = scales::comma_format(big.mark = ',', decimal.mark = '.'), expand=expansion(mult=c(0,0.05)), limits=c(0, NA))
+}

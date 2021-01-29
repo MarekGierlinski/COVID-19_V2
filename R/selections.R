@@ -53,6 +53,8 @@ sel4 <- c(
   "Bosnia and Herzegovina",
   "Bulgaria",
   "Czechia",
+  "Slovakia",
+  "Slovenia",
   "Denmark",
   "France",
   "Germany",
@@ -71,4 +73,4 @@ sel4 <- c(
 
 europe <- "AL-AD-AT-BY-BE-BA-BG-HR-CZ-DK-EE-FI-FR-DE-EL-HU-IS-IE-IT-XK-LV-LT-LU-MT-NL-MD-ME-NO-PL-PT-RO-SM-ES-RS-SK-SI-SE-CH-UA-TR-UK" %>% str_split("-") %>% unlist()
 
-EU <- "AT-BE-BG-HR-CY-CZ-DK-EE-FI-FR-DE-EL-HU-IE-IT-LV-LT-LU-MT-NL-PL-PT-RO-SK-SI-ES-SE" %>% str_split("-") %>% unlist()
+EU <- c("Austria", "Belgium", "Bulgaria", "Croatia", "Cyprus", "Czechia", "Denmark", "Estonia", "Finland", "France", "Germany", "Greece", "Hungary", "Ireland", "Italy", "Latvia", "Lithuania", "Luxembourg", "Malta", "Netherlands", "Poland", "Portugal", "Romania", "Slovakia", "Slovenia", "Spain", "Sweden")

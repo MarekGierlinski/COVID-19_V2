@@ -63,8 +63,8 @@ sum_gov <- function(gv, by_publish_date = FALSE) {
       admissions = sum(admissions),
       cases = sum(cases),
       deaths = sum(deaths),
-      dose1 = sum(dose1, na.rm=TRUE),
-      dose2 = sum(dose2, na.rm=TRUE),
+      dose1 = sum(dose1),
+      dose2 = sum(dose2),
       tests = sum(tests),
       n = n()
     ) %>% 
@@ -77,7 +77,7 @@ sum_gov <- function(gv, by_publish_date = FALSE) {
 
 
 plot_admissions_cases_deaths <- function(gv, by_publish_date = FALSE) {
-  tit <- ifelse(by_publish_date, "By publish date", "By sample/death date")
+  tit <- ifelse(by_publish_date, "By publication date", "By sample/death date")
   gov_uk <- sum_gov(gv %>% filter(date >= "2020-03-01"), by_publish_date) %>% 
     filter(name %in% c("Tests", "Cases", "Admissions", "Deaths"))
   w <- gov_uk %>%
@@ -99,12 +99,12 @@ plot_admissions_cases_deaths <- function(gv, by_publish_date = FALSE) {
     theme(
       panel.grid.minor = element_blank()
     ) +
-    scale_y_log10(label=scales::comma, breaks=10^(0:7)) +
+    scale_y_log10(label=scales::comma_format(accuracy=1), breaks=10^(0:7)) +
     geom_step(data=gov_uk, aes(x=date, y=value, colour=name), alpha=0.3) +
     geom_step(data=ww, aes(x=week_date, y=m, colour=name), size=1) +
     #geom_errorbar(data=ww, aes(x=week_date+3.5, ymin=m-s, ymax=m+s), width=2, colour="grey") +
     scale_colour_manual(values=okabe_ito_palette) +
-    labs(x=NULL, y="Daily count", colour=NULL, title=tit) +
+    labs(x=NULL, y="Daily count", colour=NULL, title="UK COVID-19 daily count", subtitle=tit) +
     scale_x_date(date_breaks = "1 month", date_labels = "%b")
 }
 
@@ -157,4 +157,19 @@ plot_vaccination_target <- function(gov) {
     geom_hline(yintercept = target, linetype="dashed") +
     xlim(as.Date(c("2020-12-12", "2021-02-17"))) +
     labs(title="Vaccination target")
+}
+
+plot_cum_deaths <- function(gv) {
+  gov_uk <- sum_gov(gv, by_publish_date = TRUE)
+  gov_uk %>%
+    filter(name == "Deaths" & value > 0) %>%
+    arrange(date) %>%
+    mutate(cum = cumsum(value)) %>%
+  ggplot(aes(x=date, y=cum)) +
+    geom_line(colour="salmon4") +
+    geom_hline(yintercept = 41500, linetype="dashed") +
+    theme_bw() +
+    scale_y_continuous(expand=expansion(mult=c(0,0.03)), labels = scales::comma_format(big.mark = ',', decimal.mark = '.', accuracy=1)) +
+    theme(panel.grid = element_blank()) +
+    labs(x=NULL, y="Cumulative deaths", title="UK COVID-19 deaths in 2020/2021")
 }
