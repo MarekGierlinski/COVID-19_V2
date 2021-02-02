@@ -27,10 +27,15 @@ plan_figures <- function() {
     fig_gov_aggregated_publish = plot_admissions_cases_deaths(gov, by_publish_date = TRUE) %>% sz(7, 4, time_stamp_gov),
     fig_gov_vaccinations = plot_vaccination(gov) %>% sz(6, 4, time_stamp_gov),
     fig_gov_vaccinations_target = plot_vaccination_target(gov) %>% sz(6, 4, time_stamp_gov),
-    fig_gov_cum_deaths = plot_cum_deaths(gov) %>% sz(5, 4, time_stamp_gov)
+    fig_gov_cum_deaths = plot_cum_deaths(gov) %>% sz(5, 4, time_stamp_gov),
+    fig_second_wave_prediction = plot_second_wave_prediction(gov) %>% sz(6, 4, time_stamp_gov)
   )
   
-  fig_plan <- figs_from_plan(bind_rows(ecdc_figures, excess_figures, gov_figures))
+  owid_figures <- drake_plan(
+    fig_owid_vaccination_top = plot_owid_vaccination(owid_vac_raw, n.top=10) %>% sz(6, 4, time_stamp_owid_vac)
+  )
+  
+  fig_plan <- figs_from_plan(bind_rows(ecdc_figures, excess_figures, gov_figures, owid_figures))
   
   save_figures <- drake_plan(
     png_figures = target(
@@ -43,6 +48,7 @@ plan_figures <- function() {
     ecdc_figures,
     excess_figures,
     gov_figures,
+    owid_figures,
     save_figures
   )
   

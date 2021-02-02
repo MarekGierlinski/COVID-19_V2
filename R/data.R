@@ -126,3 +126,17 @@ process_gov_data <- function(raw) {
   print(paste("GOV last date", max(d$date)))
   d
 }
+
+##########################################################
+
+get_url_owid_excess <- function() {
+  "https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/excess_mortality/excess_mortality.csv"
+}
+
+get_url_owid_vaccinations <- function() {
+  "https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/vaccinations/vaccinations.csv"
+}
+
+fetch_owid <- function(urlc) {
+  read_csv(urlc, col_types = cols())
+}

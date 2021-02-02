@@ -48,7 +48,7 @@ plot_gov_weekly_val <- function(gv, what) {
 
 plot_gov_weekly <- function(gv) {
   last_date <- max(gv$date, na.rm=TRUE)
-  map(c("tests", "cases", "admissions", "deaths"), function(vl) {
+  map(c("tests", "cases_pub", "admissions", "deaths_pub"), function(vl) {
     plot_gov_weekly_val(gv, vl) 
   }) %>% 
     plot_grid(plotlist = ., ncol = 1, align="v")
@@ -172,4 +172,50 @@ plot_cum_deaths <- function(gv) {
     scale_y_continuous(expand=expansion(mult=c(0,0.03)), labels = scales::comma_format(big.mark = ',', decimal.mark = '.', accuracy=1)) +
     theme(panel.grid = element_blank()) +
     labs(x=NULL, y="Cumulative deaths", title="UK COVID-19 deaths in 2020/2021")
+}
+
+tail_fit <- function(d, dmin, dmax) {
+  dd <- d %>% 
+    filter(date >= dmin & date <= dmax) %>% 
+    mutate(x = as.integer(date - dmin), y = log(value))
+  f <- lm(y ~ x, data=dd)
+  f$coefficients
+}
+
+
+plot_second_wave_prediction <- function(gov, remove.last=5) {
+  deaths <- sum_gov(gov, by_publish_date = FALSE) %>%
+    filter(name == "Deaths") %>% 
+    drop_na() %>% 
+    filter(date < max(date) - remove.last) # last few data points incomplete for "by death date"
+  d1 <- as.Date("2020-04-08")  # peak of first wave
+  d2 <- as.Date("2021-01-19")  # peak of second wave
+  delta1 <- 110  # duration of a wave
+  delta2 <- 120
+  
+  # not easy
+  fc1 <- tail_fit(deaths, d1, d1 + delta1)
+  fc2 <- tail_fit(deaths, d2, d2 + delta2)
+  r1 <- tibble(
+    x = seq(d1, d1 + delta1, 1),
+    y = exp(fc1[1] + fc1[2] * (as.integer(x - d1)))
+  ) %>% filter(row_number() > 7)
+  
+  r2 <- tibble(
+    x = seq(d2, d2 + delta2, 1),
+    y = exp(fc2[1] + fc2[2] * as.integer(x - d2))
+  ) %>% filter(row_number() > 1)
+  
+  r <- tibble(xmin=c(d1, d2), xmax=c(d1+delta1, d2+delta2), ymin=c(0,0), ymax=c(1500,1500))
+  
+  ggplot(deaths, aes(x=date, y=value)) +
+    theme_bw() +
+    theme(panel.grid = element_blank()) +
+    scale_y_continuous(expand=c(0,0)) +
+    scale_x_date(limits=as.Date(c("2020-03-01", "2021-06-01")), date_breaks="1 month", date_labels="%b") +
+    labs(x=NULL, y="Daily death count") +
+    geom_rect(data=r, aes(x=NULL, y=NULL, xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax), fill="grey80", alpha=0.3) +
+    geom_point(size=0.8) +
+    geom_line(data=r1, aes(x=x, y=y), colour="red") +
+    geom_line(data=r2, aes(x=x, y=y), colour="red", linetype="dashed")
 }

@@ -2,6 +2,8 @@ if(!dir.exists("fig")) dir.create("fig")
 
 shapes <- c(15:18, 0:14)
 okabe_ito_palette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "grey20", "grey40", "grey60", "grey80", "grey90", "black")
+tableau_10_palette <- ggthemes::tableau_color_pal(palette = "Tableau 10", type = "regular")(10)
+
 
 wd <- c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 

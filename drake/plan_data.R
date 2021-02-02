@@ -24,9 +24,19 @@ plan_data <- function() {
     time_stamp_gov = get_time_stamp(gov_raw, url_corona)
   )
   
+  owid_data <- drake_plan(
+    url_owid_exc = get_url_owid_excess(),
+    url_owid_vac = get_url_owid_vaccinations(),
+    owid_exc_raw = fetch_owid(url_owid_exc),
+    owid_vac_raw = fetch_owid(url_owid_vac),
+    time_stamp_owid_exc = get_time_stamp(owid_exc_raw, url_owid_exc),
+    time_stamp_owid_vac = get_time_stamp(owid_vac_raw, url_owid_vac)
+  )
+  
   bind_rows(
     ecdc_data,
     ft_data,
-    gov_data
+    gov_data,
+    owid_data
   )
 }
