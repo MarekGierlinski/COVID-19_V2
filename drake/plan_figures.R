@@ -32,7 +32,7 @@ plan_figures <- function() {
   )
   
   owid_figures <- drake_plan(
-    fig_owid_vaccination_top = plot_owid_vaccination(owid_vac_raw, n.top=10) %>% sz(6, 4, time_stamp_owid_vac)
+    fig_owid_vaccination_top = plot_owid_vaccination(owid_vac, n.top=10) %>% sz(6, 4, time_stamp_owid_vac)
   )
   
   fig_plan <- figs_from_plan(bind_rows(ecdc_figures, excess_figures, gov_figures, owid_figures))

@@ -140,3 +140,7 @@ get_url_owid_vaccinations <- function() {
 fetch_owid <- function(urlc) {
   read_csv(urlc, col_types = cols())
 }
+
+process_owid_vaccination_data <- function(owd) {
+  owd
+}

@@ -26,10 +26,12 @@ plan_data <- function() {
   
   owid_data <- drake_plan(
     url_owid_exc = get_url_owid_excess(),
-    url_owid_vac = get_url_owid_vaccinations(),
     owid_exc_raw = fetch_owid(url_owid_exc),
-    owid_vac_raw = fetch_owid(url_owid_vac),
     time_stamp_owid_exc = get_time_stamp(owid_exc_raw, url_owid_exc),
+
+    url_owid_vac = get_url_owid_vaccinations(),
+    owid_vac_raw = fetch_owid(url_owid_vac),
+    owid_vac = process_owid_vaccination_data(owid_vac_raw),
     time_stamp_owid_vac = get_time_stamp(owid_vac_raw, url_owid_vac)
   )
   

@@ -16,11 +16,12 @@ plot_owid_vaccination <- function(owd, n.top=10) {
     mutate(location = factor(location, levels = d_last$location))
   ggplot() +
     theme_bw() +
-    theme(legend.position = "none") +
-    geom_line(data = d, aes(x=date, y=perc, group=location, colour=location)) +
-    geom_point(data = d_last, aes(x=date, y=perc, colour=location)) +
-    geom_text_repel(data = d_last, aes(x=date, y=perc, colour=location, label=location)) +
+    theme(legend.position = "none", panel.grid.minor = element_blank()) +
+    geom_line(data = d, aes(x=date, y=perc, group=location, colour=location), size=0.3) +
+    geom_text_repel(data = d_last, aes(x=date, y=perc, colour=location, label=location), size=2.5, nudge_x = 1, direction = "y", hjust = "left", segment.colour="grey90", segment.size=0.3, segment.curvature=0) +
+    geom_point(data = d_last, aes(x=date, y=perc, colour=location), size=0.8) +
     scale_colour_manual(values=tableau_10_palette) +
-    scale_y_continuous(expand = expansion(mult = c(0, 0.03))) +
+    scale_x_date(expand=expansion(mult=c(0.03, 0.2))) +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
     labs(x=NULL, y="Percentage of people vaccinated", title=glue("Top {n.top} countries with highest vaccination proportion"))
 }
