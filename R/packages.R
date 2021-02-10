@@ -6,6 +6,7 @@ suppressPackageStartupMessages({
   library(ggrepel)
   library(ggbeeswarm)
   library(ggridges)
+  library(gganimate)
   library(RCurl)
   library(lubridate)
   library(tidyverse)

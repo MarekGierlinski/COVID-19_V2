@@ -150,6 +150,9 @@ plot_vaccination <- function(gv) {
     labs(x="Date", y="Percentage of population vaccinated", colour=NULL, shape=NULL, title="COVID-19 vaccination in the UK")
 }
 
+
+# Johnson set out a target of 15 m people by mid-February, on Jan 4.
+# This was later revised to 13.9 m.
 plot_vaccination_target <- function(gov) {
   target <- 100 * 13.9e6 / uk_pop$population[5]
   plot_vaccination(gov) +
@@ -183,11 +186,19 @@ tail_fit <- function(d, dmin, dmax) {
 }
 
 
-plot_second_wave_prediction <- function(gov, remove.last=5) {
+plot_second_wave_prediction <- function(gov, pred.date=NULL, remove.last=5) {
   deaths <- sum_gov(gov, by_publish_date = FALSE) %>%
     filter(name == "Deaths") %>% 
-    drop_na() %>% 
-    filter(date < max(date) - remove.last) # last few data points incomplete for "by death date"
+    # last few data points incomplete for "by death date"
+    filter(date < max(date) - remove.last) %>% 
+    drop_na() 
+  if(is.null(pred.date)) {
+    pd <- max(deaths$date) - remove.last
+  } else {
+    # initial prediction made on 2 Feb, based on available data up to 31 Jan, with 
+    # last 5 dates of incomplete data removed. Hence 26 Jan.
+    pd <- pred.date - 1 - remove.last
+  }
   d1 <- as.Date("2020-04-08")  # peak of first wave
   d2 <- as.Date("2021-01-19")  # peak of second wave
   delta1 <- 110  # duration of a wave
@@ -195,7 +206,7 @@ plot_second_wave_prediction <- function(gov, remove.last=5) {
   
   # not easy
   fc1 <- tail_fit(deaths, d1, d1 + delta1)
-  fc2 <- tail_fit(deaths, d2, d2 + delta2)
+  fc2 <- tail_fit(deaths, d2, pd)
   r1 <- tibble(
     x = seq(d1, d1 + delta1, 1),
     y = exp(fc1[1] + fc1[2] * (as.integer(x - d1)))
@@ -213,7 +224,7 @@ plot_second_wave_prediction <- function(gov, remove.last=5) {
     theme(panel.grid = element_blank()) +
     scale_y_continuous(expand=c(0,0)) +
     scale_x_date(limits=as.Date(c("2020-03-01", "2021-06-01")), date_breaks="1 month", date_labels="%b") +
-    labs(x=NULL, y="Daily death count") +
+    labs(x=NULL, y="Daily death count", title=glue("Second wave prediction made on {pred.date}")) +
     geom_rect(data=r, aes(x=NULL, y=NULL, xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax), fill="grey80", alpha=0.3) +
     geom_point(size=0.8) +
     geom_line(data=r1, aes(x=x, y=y), colour="red") +

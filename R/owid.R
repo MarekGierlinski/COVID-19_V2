@@ -1,9 +1,10 @@
-non_countries <- c("Gibraltar", "Isle of Man")
+non_countries <- c("Gibraltar", "Isle of Man", "Jersey", "Guernsey")
 
-plot_owid_vaccination <- function(owd, n.top=10) {
+plot_owid_vaccination <- function(owd, n.top=10, what="people_vaccinated_per_hundred", sub) {
   d <- owd %>% 
-    filter(!is.na(total_vaccinations_per_hundred) & !is.na(iso_code) & !(location %in% non_countries)) %>% 
-    select(location, date, perc = total_vaccinations_per_hundred)
+    mutate(perc = !!sym(what)) %>% 
+    filter(!is.na(perc) & !is.na(iso_code) & !(location %in% non_countries)) %>% 
+    select(location, date, perc)
   d_last <- d %>% 
     group_by(location) %>% 
     arrange(date) %>% 
@@ -23,5 +24,5 @@ plot_owid_vaccination <- function(owd, n.top=10) {
     scale_colour_manual(values=tableau_10_palette) +
     scale_x_date(expand=expansion(mult=c(0.03, 0.2))) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
-    labs(x=NULL, y="Percentage of people vaccinated", title=glue("Top {n.top} countries with highest vaccination proportion"))
+    labs(x=NULL, y="Percentage of people vaccinated", title=glue("Top {n.top} countries with highest vaccination proportion"), subtitle=sub)
 }

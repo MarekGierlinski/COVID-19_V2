@@ -208,3 +208,26 @@ plot_cases_deaths_track <- function(cvd, sel, min.date="2020-09-01", title=NULL)
     scale_x_continuous(labels = scales::comma_format(big.mark = ',', decimal.mark = '.'), expand=expansion(mult=c(0,0.05)), limits=c(0, NA)) +
     scale_y_continuous(labels = scales::comma_format(big.mark = ',', decimal.mark = '.'), expand=expansion(mult=c(0,0.05)), limits=c(0, NA))
 }
+
+
+animate_cases_deaths <- function(cvd, sel, min.date="2020-03-01") {
+  d <- cvd %>%
+    filter(country %in% sel) %>% 
+    mutate(count = 1e6 * count / population) %>% 
+    group_by(country, indicator) %>% 
+    arrange(date) %>% 
+    mutate(count = cumsum(count)) %>% 
+    select(date, country, population, indicator, count) %>%
+    filter(date >= as.Date("2020-03-01")) %>% 
+    pivot_wider(id_cols = c(date, country, population), names_from = indicator, values_from = count)
+  ggplot(d, aes(x=cases, y=deaths, group=country)) + 
+    theme_bw() +
+    geom_path(colour="grey70") +
+    geom_point() +
+    geom_text(aes(label=country), vjust=-1.5) +
+    transition_reveal(date) +
+    view_follow() +
+    labs(title="{frame_along}", x="Cumulative cases per million", y="Cumulative deaths per million") +
+    scale_x_continuous(labels = scales::comma_format(big.mark = ',', decimal.mark = '.'), expand=expansion(mult=c(0,0.05)), limits=c(0, NA)) +
+    scale_y_continuous(labels = scales::comma_format(big.mark = ',', decimal.mark = '.'), expand=expansion(mult=c(0,0.05)), limits=c(0, NA))
+}
