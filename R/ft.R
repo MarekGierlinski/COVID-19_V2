@@ -111,7 +111,11 @@ plot_excess_prop <- function(x, ctry=NULL, by.region=FALSE, ncol=1, y.scale=3) {
         w <- w %>% 
           mutate(prop = d2020 / deaths) %>% 
           filter(year < 2020)
-        w$pval = t.test(w$prop, mu = 1, alternative = "greater")$p.value
+        if(nrow(w) <= 3) {
+          w$pval <- 1
+        } else {
+          w$pval = t.test(w$prop, mu = 1, alternative = "greater")$p.value
+        }
         w
       }
     }) %>% 

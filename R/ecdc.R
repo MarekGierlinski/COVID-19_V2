@@ -1,9 +1,9 @@
-plot_countries_col <- function(cvd, sel, what="cases", title=NULL, subtitle=NULL) {
+plot_countries_col <- function(cvd, sel, what="cases", title=NULL, subtitle=NULL, start_date="2020-02-15") {
   d <- cvd %>%
     filter(indicator == what) %>% 
     #mutate(value = 1e6 * count / population, value = value / 7) %>% 
     mutate(value = rate) %>% 
-    filter(country %in% sel & date >= as.Date("2020-02-15")) %>% 
+    filter(country %in% sel & date >= as.Date(start_date)) %>% 
     arrange(date)
   
   ggplot(d, aes(x=date, y=value)) +
@@ -17,7 +17,7 @@ plot_countries_col <- function(cvd, sel, what="cases", title=NULL, subtitle=NULL
     facet_wrap(~country, scale="free_y") +
     labs(x=NULL, y=glue("Daily {what} per million"), title=title, subtitle=subtitle) +
     scale_y_continuous(labels = scales::comma_format(big.mark = ',', decimal.mark = '.'), expand=expansion(mult=c(0,0.05)), limits=c(0, NA)) +
-    scale_x_date(date_breaks = "2 months", date_labels = "%b")
+    scale_x_date(date_breaks = "3 months", date_labels = "%b")
 }
 
 plot_countries_ridge <- function(cvd, sel, what="cases", scl=0.1) {
@@ -207,6 +207,25 @@ plot_cases_deaths_track <- function(cvd, sel, min.date="2020-09-01", title=NULL)
     labs(x="Cumulative cases per million", y="Cumulative deaths per million", title=title, colour=NULL) +
     scale_x_continuous(labels = scales::comma_format(big.mark = ',', decimal.mark = '.'), expand=expansion(mult=c(0,0.05)), limits=c(0, NA)) +
     scale_y_continuous(labels = scales::comma_format(big.mark = ',', decimal.mark = '.'), expand=expansion(mult=c(0,0.05)), limits=c(0, NA))
+}
+
+
+plot_last_week_eu_uk <- function(cvd, what="cases") {
+  d <- cvd %>% filter(country %in% c(EU, "United Kingdom"))
+  mxd <- max(d$date)
+  
+  d %>% 
+    filter(date == mxd & indicator == what) %>%
+    mutate(count_pop = 1e6 * count / population) %>%
+    arrange(count_pop) %>%
+    mutate(country = as_factor(country)) %>%
+  ggplot(aes(x=count_pop, y=country, fill=country=="United Kingdom")) +
+    geom_col() +
+    labs(x=glue::glue("Weekly {what} per 1 million population"), y=NULL, title=glue::glue("Week beginning {mxd}")) +
+    theme_bw() +
+    theme(legend.position = "none", panel.grid = element_blank()) +
+    scale_x_continuous(expand = expansion(mult = c(0, 0.05))) +
+    scale_fill_manual(values = c("grey30", "royalblue"))
 }
 
 

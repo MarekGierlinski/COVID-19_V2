@@ -132,4 +132,28 @@ ggheatmap <- function(tab, order.col = TRUE, order.row = TRUE, dendro.line.size 
 }
 
 
+plot_vaccination_col <- function(owid_vac, ecdc, min.pop=1e6, mark="United Kingdom") {
+  pops <- ecdc %>% 
+    group_by(country_code, population) %>% 
+    summarise()
+  vac <- owid_vac %>%
+    filter(!str_detect(iso_code, "_")) %>%
+    group_by(location, iso_code) %>% 
+    summarise(vac = max(people_fully_vaccinated_per_hundred, na.rm = TRUE)) %>%
+    filter(is.finite(vac) & vac<100) %>% 
+    ungroup()
 
+  vac %>%
+    left_join(pops, by=c("iso_code" = "country_code")) %>% 
+    drop_na() %>% 
+    filter(population > min.pop) %>% 
+    arrange(vac) %>%
+    mutate(location = factor(location, levels=location)) %>% 
+  ggplot(aes(x=vac, y=location, fill=location==mark)) +
+    geom_col() +
+    theme_bw() +
+    theme(panel.grid.major.y = element_blank(), legend.position = "none") +
+    scale_fill_manual(values=c("grey50", "red")) +
+    scale_x_continuous(expand = expansion(mult = c(0, 0.03))) +
+    labs(x="Percentage population fully vaccinated", y=NULL)
+}

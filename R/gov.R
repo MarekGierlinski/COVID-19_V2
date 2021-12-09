@@ -126,8 +126,8 @@ plot_vaccination <- function(gv) {
   gd <- gv %>% 
     filter(cum_dose1 > 0) %>% 
     mutate(
-      cum_dose1 = if_else(is.na(dose1) | dose1 > 0, cum_dose1, as.numeric(NA)),
-      cum_dose2 = if_else(is.na(dose2) | dose1 > 0, cum_dose2, as.numeric(NA))
+      cum_dose1 = if_else(is.na(dose1) | dose1 > 0, cum_dose1, as.integer(NA)),
+      cum_dose2 = if_else(is.na(dose2) | dose1 > 0, cum_dose2, as.integer(NA))
     ) %>% 
     select(date, cum_dose1, cum_dose2, population, nation) %>% 
     pivot_longer(cols=c("cum_dose1", "cum_dose2"), names_to="dose", values_to="count") %>% 
@@ -162,17 +162,75 @@ plot_vaccination_target <- function(gov) {
     labs(title="Vaccination target")
 }
 
+x_left = as.Date("2020-12-12")
+first_target = list(x=as.Date("2021-02-15"), y=15)
+second_target = list(x=as.Date("2021-04-15"), y=32)
+
+plot_uk_vaccination <- function(gv) {
+  ft <- tibble(x=c(first_target$x, first_target$x, x_left), y=c(0, first_target$y, first_target$y))
+  st <- tibble(x=c(second_target$x, second_target$x, x_left), y=c(0, second_target$y, second_target$y))
+  
+  # include older weekly reports
+  gw <- gv %>% 
+    filter(date < "2021-01-05") %>% 
+    filter(weekly_dose1 > 0 | weekly_dose2 > 0) %>% 
+    select(date, weekly_dose1, weekly_dose2, population, nation) %>% 
+    pivot_longer(cols=c("weekly_dose1", "weekly_dose2"), names_to="dose", values_to="count") %>% 
+    mutate(dose = recode(dose, weekly_dose1 = "First dose", weekly_dose2 = "Second dose")) %>% 
+    arrange(date) %>% 
+    group_by(nation, dose) %>% 
+    mutate(cumulative = cumsum(count)) %>% 
+    ungroup()
+  
+  
+  gd <- gv %>% 
+    filter(cum_dose1 > 0) %>% 
+    mutate(
+      cum_dose1 = if_else(is.na(dose1) | dose1 > 0, cum_dose1, as.integer(NA)),
+      cum_dose2 = if_else(is.na(dose2) | dose1 > 0, cum_dose2, as.integer(NA))
+    ) %>% 
+    select(date, cum_dose1, cum_dose2, population, nation) %>% 
+    pivot_longer(cols=c("cum_dose1", "cum_dose2"), names_to="dose", values_to="count") %>% 
+    mutate(dose = recode(dose, cum_dose1 = "First dose", cum_dose2 = "Second dose")) %>% 
+    mutate(cumulative = count) 
+  
+  gf <- bind_rows(gw, gd) %>% 
+    drop_na() %>% 
+    group_by(date, dose) %>% 
+    summarise(cumulative = sum(cumulative))
+  
+  ggplot(gf, aes(x=date, y=cumulative / 1e6)) +
+    theme_bw() +
+    theme(panel.grid = element_blank()) +
+    geom_line(aes(group=dose), colour="grey80") +
+    geom_point(aes(shape = dose)) +
+    scale_y_continuous(labels = scales::comma_format(big.mark = ',', decimal.mark = '.'), expand=expansion(mult=c(0,0.05)), limits=c(0, NA)) +
+    labs(x = NULL, y = "People vaccinated (millions)", shape=NULL) +
+    scale_x_date(expand = expansion(mult=c(0,0.05)), limits=c(as.Date(c("2020-12-12", NA)))) +
+    scale_shape_manual(values = c(19, 21)) +
+    geom_path(data=ft, aes(x=x, y=y), colour="grey50", linetype="dotted") +
+    geom_path(data=st, aes(x=x, y=y), colour="grey50", linetype="dotted") +
+    annotate("text", y=first_target$y, x=as.Date("2020-12-18"), label="First target", hjust=0, vjust=-0.5) +
+    annotate("text", y=second_target$y, x=as.Date("2020-12-18"), label="Second target", hjust=0, vjust=-0.5)
+
+}
+
+
 plot_cum_deaths <- function(gv) {
+  hlines <- tibble(val = c(41000, 127000), lab=prettyNum(val, big.mark = ","))
   gov_uk <- sum_gov(gv, by_publish_date = TRUE)
   gov_uk %>%
+    drop_na() %>% 
     filter(name == "Deaths" & value > 0) %>%
     arrange(date) %>%
     mutate(cum = cumsum(value)) %>%
   ggplot(aes(x=date, y=cum)) +
-    geom_line(colour="salmon4") +
-    geom_hline(yintercept = 41500, linetype="dashed") +
+    geom_line(colour="salmon4", size=0.8) +
+    geom_hline(yintercept = hlines$val, linetype="dashed", alpha=0.3) +
+    geom_text(data=hlines, aes(x=as.Date("2020-03-10"), y=val, label=lab), vjust=-0.4, hjust=0) +
     theme_bw() +
-    scale_y_continuous(expand=expansion(mult=c(0,0.03)), labels = scales::comma_format(big.mark = ',', decimal.mark = '.', accuracy=1)) +
+    scale_x_date(limits=as.Date(c("2020-03-01", NA)), date_breaks="3 months", date_labels="%b %y") +
+    scale_y_continuous(expand=expansion(mult=c(0,0.03)), limits=c(0, NA), labels = scales::comma_format(big.mark = ',', decimal.mark = '.', accuracy=1)) +
     theme(panel.grid = element_blank()) +
     labs(x=NULL, y="Cumulative deaths", title="UK COVID-19 deaths in 2020/2021")
 }
@@ -229,4 +287,40 @@ plot_second_wave_prediction <- function(gov, pred.date=NULL, remove.last=5) {
     geom_point(size=0.8) +
     geom_line(data=r1, aes(x=x, y=y), colour="red") +
     geom_line(data=r2, aes(x=x, y=y), colour="red", linetype="dashed")
+}
+
+plot_wave_comparison <- function(gov, remove.last=5) {
+  deaths <- sum_gov(gov, by_publish_date = FALSE) %>%
+    filter(name == "Deaths") %>% 
+    # last few data points incomplete for "by death date"
+    filter(date < max(date) - remove.last) %>% 
+    drop_na()
+  d1 <- as.Date("2020-04-08")  # peak of first wave
+  d2 <- as.Date("2021-01-19")  # peak of second wave
+  w1 <- deaths %>%
+    mutate(
+      x = as.integer(date - d1),
+      wave = "first"
+    ) %>% 
+    filter(x >= 0 & x < 120) %>% 
+    mutate(y = value / mean(value[1:5]))
+  w2 <- deaths %>%
+    mutate(
+      x = as.integer(date - d2),
+      wave = "second"
+    ) %>% 
+    filter(x >= 0 & x < 120) %>% 
+    mutate(y = value / mean(value[1:5]))
+  
+  w <- bind_rows(w1, w2) %>% 
+    filter(date < max(date) - remove.last)
+  
+  ggplot(w, aes(x=x, y=y, colour=wave)) +
+    theme_bw() +
+    theme(panel.grid.minor = element_blank()) +
+    geom_point() +
+    scale_colour_manual(values=okabe_ito_palette) +
+    #scale_y_log10() +
+    geom_smooth(data=filter(w, x>=0), size=0.5, alpha=0.2) +
+    labs(x="Days after peak", y="Fraction of the peak value", title="First and second wave, deaths after the peak")
 }

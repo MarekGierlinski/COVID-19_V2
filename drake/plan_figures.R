@@ -10,7 +10,9 @@ plan_figures <- function() {
     fig_ecdc_cases_all = plot_countries_line(ecdc, what="cases", n.col=18) %>% sz(26, 16, time_stamp_ecdc),
     fig_ecdc_cases_deaths_all = plot_cases_diff_deaths(ecdc, pop=TRUE) %>% sz(8, 20, time_stamp_ecdc),
     fig_ecdc_cases_deaths_pop = plot_cases_deaths_pop(ecdc) %>% sz(10, 8, time_stamp_ecdc),
-    fig_ecdc_death_tracks = plot_cases_deaths_track(ecdc, c(EU, "United Kingdom"), title="Second wave tracks for UK and EU") %>% sz(7, 6, time_stamp_ecdc)
+    fig_ecdc_death_tracks = plot_cases_deaths_track(ecdc, c(EU, "United Kingdom"), title="Second wave tracks for UK and EU") %>% sz(7, 6, time_stamp_ecdc),
+    fig_ecdc_last_week_eu_uk_cases = plot_last_week_eu_uk(ecdc, "cases") %>% sz(5, 5, time_stamp_ecdc),
+    fig_ecdc_last_week_eu_uk_deaths = plot_last_week_eu_uk(ecdc, "deaths") %>% sz(5, 5, time_stamp_ecdc)
   )
   
   excess_figures <- drake_plan(
@@ -25,23 +27,32 @@ plan_figures <- function() {
     fig_gov_separate = plot_gov_weekly(gov) %>% sz(9, 8, time_stamp_gov),
     fig_gov_aggregated_sample = plot_admissions_cases_deaths(gov, by_publish_date = FALSE) %>% sz(7, 4, time_stamp_gov),
     fig_gov_aggregated_publish = plot_admissions_cases_deaths(gov, by_publish_date = TRUE) %>% sz(7, 4, time_stamp_gov),
-    fig_gov_vaccinations = plot_vaccination(gov) %>% sz(6, 4, time_stamp_gov),
-    fig_gov_vaccinations_target = plot_vaccination_target(gov) %>% sz(6, 4, time_stamp_gov),
+    fig_gov_vaccinations = plot_vaccination(gov) %>% sz(8, 6, time_stamp_gov),
+    #fig_gov_vaccinations_target = plot_vaccination_target(gov) %>% sz(6, 4, time_stamp_gov),
+    fig_gov_uk_vaccination = plot_uk_vaccination(gov) %>% sz(8, 7, time_stamp_gov),
     fig_gov_cum_deaths = plot_cum_deaths(gov) %>% sz(5, 4, time_stamp_gov),
-    fig_gov_second_wave_prediction = plot_second_wave_prediction(gov, pred.date=as.Date("2021-02-01")) %>% sz(6, 4, time_stamp_gov)
+    fig_gov_second_wave_prediction = plot_second_wave_prediction(gov, pred.date=as.Date("2021-02-01")) %>% sz(6, 4, time_stamp_gov),
+    fig_gov_wave_comparison = plot_wave_comparison(gov) %>% sz(8, 6, time_stamp_gov)
   )
   
   owid_figures <- drake_plan(
     fig_owid_vaccination_first = plot_owid_vaccination(owid_vac, n.top=10, what="people_vaccinated_per_hundred", sub="people receiving first dose") %>% sz(6, 5, time_stamp_owid_vac),
-    fig_owid_vaccination_full = plot_owid_vaccination(owid_vac, n.top=10, what="people_fully_vaccinated_per_hundred", sub="people fully vaccinated") %>% sz(6, 5, time_stamp_owid_vac)
+    fig_owid_vaccination_full = plot_owid_vaccination(owid_vac, n.top=10, what="people_fully_vaccinated_per_hundred", sub="people fully vaccinated") %>% sz(6, 5, time_stamp_owid_vac),
+    fig_owid_vaccination_first_full_eu = plot_owid_vac_first_fully(owid_vac, c(EU, "United Kingdom")) %>% sz(7, 6, time_stamp_owid_vac),
+    fig_owid_vaccination_first_full_all = plot_owid_vac_first_fully(owid_vac, trans="sqrt", brks=c(1,5,10,20,30,40,50)) %>% sz(8, 7, time_stamp_owid_vac),
+    fig_owid_vaccination_col_japan = plot_vaccination_col(owid_vac, ecdc, mark="Japan") %>% sz(5, 16, time_stamp_owid_vac)
   )
   
   animations <- drake_plan(
-    anim_ecdc_death_tracks = animate_cases_deaths(ecdc, c(EU, "United Kingdom")),
-    save_anim_death_tracks = animate(anim_ecdc_death_tracks, renderer = gifski_renderer(file="fig/ecdc_anim_death_tracks.gif"), nframes=600, end_pause = 60)
+    #anim_ecdc_death_tracks = animate_cases_deaths(ecdc, c(EU, "United Kingdom")),
+    #save_anim_death_tracks = animate(anim_ecdc_death_tracks, renderer = gifski_renderer(file="fig/ecdc_anim_death_tracks.gif"), nframes=600, end_pause = 60)
+    anim_eu_vaccination = anim_owid_vac_fully_race(owid_vac, sel=c(EU, "United Kingdom")),
+    mpeg_eu_vaccination = animate(anim_eu_vaccination, renderer = ffmpeg_renderer(), width=800, height=450, nframes=1000),
+    save_mpeg_eu_vaccination = anim_save("fig/owid_anim_eu.mp4", animation=mpeg_eu_vaccination)
+    #save_anim_eu_vaccination = animate(anim_eu_vaccination, renderer = gifski_renderer(file="fig/owid_anim_eu.gif"), width=800, height=500, nframes=1000, end_pause = 60)
   )
   
-  fig_plan <- figs_from_plan(bind_rows(ecdc_figures, excess_figures, gov_figures, owid_figures))
+  fig_plan <- figs_from_plan(bind_rows(ecdc_figures, gov_figures, owid_figures))
   
   save_figures <- drake_plan(
     png_figures = target(
@@ -52,10 +63,10 @@ plan_figures <- function() {
   
   bind_rows(
     ecdc_figures,
-    excess_figures,
+    #excess_figures,
     gov_figures,
     owid_figures,
-    animations,
+    #animations,
     save_figures
   )
   
